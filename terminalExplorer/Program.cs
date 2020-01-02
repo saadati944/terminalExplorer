@@ -73,14 +73,16 @@ namespace terminalExplorer
                     else if (ck.Key == ConsoleKey.Enter)
                     {
                         if (selected < dirs.Length)
+                        {
                             openPath((path.Length > 3) ? path + '\\' + dirs[selected] : path + dirs[selected]);
+                            break;
+                        }
                         else
                             try
                             {
                                 System.Diagnostics.Process.Start(path + '\\' + files[selected - dirs.Length]);
                             }
                             catch { }
-                        break;
                     }
                     else if (ck.Key == ConsoleKey.Backspace)
                     {
@@ -99,17 +101,27 @@ namespace terminalExplorer
                     else if (ck.Key == ConsoleKey.Tab)
                     {
                         bool ex = false;
-                        switch (menu(new string[] { "Back","Home" ,"Exit"}, "select an item then press enter\n"))
+                        string op1 = (selected < dirs.Length) ? "Open in explorer" : "Run width argument";
+                        string mes = menu(new string[] { "Back", "Home", op1, "Exit" }, "select an item then press enter\n");
                         {
-                            case "Back":
+                            if (mes == "Back")
                                 ex = true;
-                                break;
-                            case "Home":
+                            if(mes=="Home")
                                 openPath("");
-                                break;
-                            case "Exit":
+                            if (mes == op1)
+                            {
+                                if (selected < dirs.Length)
+                                    System.Diagnostics.Process.Start(path + '\\' + dirs[selected]);
+                                else
+                                {
+                                    Console.Clear();
+                                    ex = true;
+                                    Console.Write("enter argument : ");
+                                    System.Diagnostics.Process.Start(path + '\\' + files[selected],Console.ReadLine());
+                                }
+                            }
+                            if(mes== "Exit")
                                 System.Diagnostics.Process.GetCurrentProcess().Kill();
-                                break;
                         }
                         if (ex)
                             break;
