@@ -10,12 +10,26 @@ namespace terminalExplorer
     {
         static string path;
         static string[] files, dirs;
-        static void openPath(string p)
+        static int prevpathlen = 20;
+        static List<string> prevPath = new List<string>(prevpathlen + 1);
+        static void openPath(string p, bool prev = true)
         {
+            if (p!="" && prev)
+            {
+                if (prevPath.Count == prevpathlen)
+                    prevPath.RemoveAt(0);
+                prevPath.Add(p);
+            }
             if (p == "")
             {
                 Console.Clear();
                 path = menu(System.IO.Directory.GetLogicalDrives(), "Terminal Explorer");
+                if (prev)
+                {
+                    if (prevPath.Count == prevpathlen)
+                        prevPath.RemoveAt(0);
+                    prevPath.Add(path);
+                }
                 files = correctArrey(System.IO.Directory.GetFiles(path));
                 dirs = correctArrey(System.IO.Directory.GetDirectories(path));
             }
@@ -25,8 +39,18 @@ namespace terminalExplorer
                 while (path[path.Length - 1] == '\\')
                     path = path.Remove(path.Length - 1);
                 if (path.Length < 3) path += '\\';
-                files = correctArrey(System.IO.Directory.GetFiles(path));
-                dirs = correctArrey(System.IO.Directory.GetDirectories(path));
+                try
+                {
+                    files = correctArrey(System.IO.Directory.GetFiles(path));
+                    dirs = correctArrey(System.IO.Directory.GetDirectories(path));
+                }
+                catch
+                {
+                    if (prevPath.Count != 0)
+                        prevPath.RemoveAt(prevPath.Count - 1);
+                    if (prevPath.Count == 0) openPath("");
+                    else openPath(prevPath[prevPath.Count - 1]);
+                };
             }
         }
         static void Main(string[] args)
@@ -102,25 +126,44 @@ namespace terminalExplorer
                     {
                         bool ex = false;
                         string op1 = (selected < dirs.Length) ? "Open in explorer" : "Run width argument";
-                        string mes = menu(new string[] { "Back", "Home", op1, "Exit" }, "select an item then press enter\n");
+                        string mes = menu(new string[] { "Back", "Home", op1, "Previous", "Exit" }, "select an item then press enter\n");
                         {
                             if (mes == "Back")
                                 ex = true;
-                            if(mes=="Home")
+                            else if (mes == "Home")
+                            {
+                                ex = true;
                                 openPath("");
-                            if (mes == op1)
+                            }
+                            else if (mes == op1)
                             {
                                 if (selected < dirs.Length)
+                                {
+                                    ex = true;
                                     System.Diagnostics.Process.Start(path + '\\' + dirs[selected]);
+                                }
                                 else
                                 {
                                     Console.Clear();
                                     ex = true;
                                     Console.Write("enter argument : ");
-                                    System.Diagnostics.Process.Start(path + '\\' + files[selected],Console.ReadLine());
+                                    System.Diagnostics.Process.Start(path + '\\' + files[selected - dirs.Length], Console.ReadLine());
                                 }
                             }
-                            if(mes== "Exit")
+                            else if (mes == "Previous")
+                            {
+                                ex = true;
+                                prevPath.Insert(0, "Back");
+                                int innerMes = menu2(prevPath.ToArray(), "select an to item to go to it\n") - 1;
+                                prevPath.RemoveAt(0);
+                                if (innerMes != -1)
+                                {
+                                    string p = prevPath[innerMes];
+                                    prevPath.RemoveAt(innerMes);
+                                    openPath(p);
+                                }
+                            }
+                            else if (mes == "Exit")
                                 System.Diagnostics.Process.GetCurrentProcess().Kill();
                         }
                         if (ex)
@@ -128,25 +171,45 @@ namespace terminalExplorer
                     }
                     else
                     {
-                        if(selected<dirs.Length)
+                        if (selected < dirs.Length)
                         {
-                            for(int n = 0; n < dirs.Length; n++)
+                            for (int n=(selected<dirs.Length-1)?selected+1:0; n < dirs.Length; n++)
                             {
                                 if (Char.ToLower(dirs[n][0]) == Char.ToLower(ck.KeyChar))
                                 {
                                     selected = n;
                                     break;
                                 }
+                                else if (n == dirs.Length - 1)
+                                {
+                                    for (int m = 0; m < dirs.Length; m++)
+                                        if (Char.ToLower(dirs[m][0]) == Char.ToLower(ck.KeyChar))
+                                        {
+                                            selected = m;
+                                            break;
+                                        }
+                                }
+
                             }
                         }
                         else
                         {
-                            for (int n = 0; n < files.Length; n++)
+
+                            for (int n = (selected-dirs.Length < files.Length - 1) ? selected-dirs.Length + 1 : dirs.Length; n < files.Length; n++)
                             {
                                 if (Char.ToLower(files[n][0]) == Char.ToLower(ck.KeyChar))
                                 {
                                     selected = dirs.Length + n;
                                     break;
+                                }
+                                else if (n == files.Length - 1)
+                                {
+                                    for (int m = 0; m < files.Length; m++)
+                                        if (Char.ToLower(files[m][0]) == Char.ToLower(ck.KeyChar))
+                                        {
+                                            selected = m+dirs.Length;
+                                            break;
+                                        }
                                 }
                             }
                         }
@@ -269,9 +332,47 @@ namespace terminalExplorer
                 last = selected;
             }
         }
+        static int menu2(string[] items, string title)
+        {
+            Console.Clear();
+            Console.WriteLine(title);
+            int enterCount = entersCount(title) + 1;
+            int selected = 0, last = 0;
+            for (int i = 0; i < items.Length; i++)
+                Console.WriteLine((i == selected ? "  -->  " : "") + items[i] + (i == selected ? "  <--" : ""));
+            while (true)
+            {
+                ConsoleKeyInfo ck = Console.ReadKey(true);
+                if (ck.Key == ConsoleKey.DownArrow)
+                {
+                    selected++;
+                    if (selected > items.Length - 1)
+                        selected = 0;
+                }
+                else if (ck.Key == ConsoleKey.UpArrow)
+                {
+                    selected--;
+                    if (selected < 0)
+                        selected = items.Length - 1;
+                }
+                else if (ck.Key == ConsoleKey.Enter)
+                {
+                    return selected;
+                }
+                if (selected != last)
+                {
+                    Console.SetCursorPosition(0, enterCount + last);
+                    Console.Write(emptyString(12 + items[last].Length));
+                    Console.SetCursorPosition(0, enterCount + last);
+                    Console.Write(items[last]);
+                    Console.SetCursorPosition(0, enterCount + selected);
+                    Console.Write("  -->  " + items[selected] + "  <--");
+                }
+                last = selected;
+            }
+        }
     }
 }
-
 
 
 
