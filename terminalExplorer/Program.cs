@@ -436,9 +436,3 @@ namespace terminalExplorer
 }
 
 
-
-/*for (int i = 0; i < dirs.Length; i++)
-                    Console.WriteLine( (i == selected ? "╔══════════════════════════════════════════\n║  " : "") + "dir  : " + dirs[i] + (i == selected ? "\n╚══════════════════════════════════════════" : ""));
-                Console.WriteLine("\nfiles :\n");
-                for (int i = 0; i < files.Length; i++)
-                    Console.WriteLine((selected >= dirs.Length && i == selected - dirs.Length ? "╔══════════════════════════════════════════\n║  " : "") + "file : " + files[i] + (selected >= dirs.Length && i == selected - dirs.Length ? "\n╚══════════════════════════════════════════" : ""));*/
