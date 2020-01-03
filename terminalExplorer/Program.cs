@@ -125,21 +125,77 @@ namespace terminalExplorer
                     else if (ck.Key == ConsoleKey.Tab)
                     {
                         bool ex = false;
-                        string op1 = (selected < dirs.Length) ? "Open in explorer" : "Run width argument";
-                        string mes = menu(new string[] { "Back", "Home", op1, "Previous", "Exit" }, "select an item then press enter\n");
+                        string op1 = (selected < dirs.Length) ? "Open selected in explorer" : "Run width argument";
+                        string mes = menu(new string[] { "Back", "Goto", "Home", "Info (path)", "info (selected)" , op1,"Open path in explorer", "Previous", "Exit" }, "select an item then press enter\n");
                         {
                             if (mes == "Back")
                                 ex = true;
+                            else if (mes == "Goto")
+                            {
+                                Console.Clear();
+                                ex = true;
+                                Console.Write("enter a path to go to it (nothing to cancel) : ");
+                                string p = Console.ReadLine();
+                                while (p.Length > 1 && !System.IO.Directory.Exists(p))
+                                {
+                                    Console.Write("enter a valid path to go to it (nothing to cancel) : ");
+                                    p = Console.ReadLine();
+                                }
+                                openPath(p);
+                            }
                             else if (mes == "Home")
                             {
                                 ex = true;
                                 openPath("");
                             }
+                            else if (mes == "Info (path)")
+                            {
+                                Console.Clear();
+                                ex = true;
+                                Console.WriteLine(path);
+                                System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(path);
+                                Console.WriteLine("CreationTime : " + di.CreationTime.ToLongDateString() + "  " + di.CreationTime.ToLongTimeString());
+                                Console.WriteLine("LastAccessTime : " + di.LastAccessTime.ToLongDateString() + "  " + di.LastAccessTime.ToLongTimeString());
+                                Console.WriteLine("LastWriteTime : " + di.LastWriteTime.ToLongDateString() + "  " + di.LastWriteTime.ToLongTimeString());
+                                Console.WriteLine(di.Attributes.ToString());
+                                Console.Write("press any key to continue");
+                                Console.ReadKey(true);
+                            }
+                            else if (mes == "info (selected)")
+                            {
+                                Console.Clear();
+                                ex = true;
+                                if (selected < dirs.Length)
+                                {
+                                    Console.WriteLine(path+"\\"+dirs[selected]);
+                                    System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(path + "\\" + dirs[selected]);
+                                    Console.WriteLine("directory CreationTime : " + di.CreationTime.ToLongDateString() + "  " + di.CreationTime.ToLongTimeString());
+                                    Console.WriteLine("directory LastAccessTime : " + di.LastAccessTime.ToLongDateString() + "  " + di.LastAccessTime.ToLongTimeString());
+                                    Console.WriteLine("directory LastWriteTime : " + di.LastWriteTime.ToLongDateString() + "  " + di.LastWriteTime.ToLongTimeString());
+                                    Console.WriteLine(di.Attributes.ToString());
+                                    Console.Write("press any key to continue");
+                                    Console.ReadKey(true);
+                                }
+                                else
+                                {
+
+                                    Console.WriteLine(path + "\\" + files[selected - dirs.Length]);
+                                    System.IO.FileInfo di = new System.IO.FileInfo(path + "\\" + files[selected - dirs.Length]);
+                                    float gbFileSize = (float)(di.Length / 1024.0 / 1024.0 );
+                                    Console.WriteLine("file size : " + di.Length.ToString() + " Bytes            "+((gbFileSize>=921.6)?"("+(gbFileSize/1024.0).ToString()+" GB)":((gbFileSize >= 0.9216)? "(" + (gbFileSize).ToString() + " MB)" : "(" + (gbFileSize * 1024.0).ToString() + " KB)")));
+                                    Console.WriteLine("file CreationTime : " + di.CreationTime.ToLongDateString() + "  " + di.CreationTime.ToLongTimeString());
+                                    Console.WriteLine("file LastAccessTime : " + di.LastAccessTime.ToLongDateString() + "  " + di.LastAccessTime.ToLongTimeString());
+                                    Console.WriteLine("fileLastWriteTime : " + di.LastWriteTime.ToLongDateString() + "  " + di.LastWriteTime.ToLongTimeString());
+                                    Console.WriteLine(di.Attributes.ToString());
+                                    Console.Write("press any key to continue");
+                                    Console.ReadKey(true);
+                                }
+                            }
                             else if (mes == op1)
                             {
                                 if (selected < dirs.Length)
                                 {
-                                    ex = true;
+                                    ex = true; 
                                     System.Diagnostics.Process.Start(path + '\\' + dirs[selected]);
                                 }
                                 else
@@ -149,6 +205,11 @@ namespace terminalExplorer
                                     Console.Write("enter argument : ");
                                     System.Diagnostics.Process.Start(path + '\\' + files[selected - dirs.Length], Console.ReadLine());
                                 }
+                            }
+                            else if(mes== "Open path in explorer")
+                            {
+                                ex = true;
+                                System.Diagnostics.Process.Start(path + '\\' + dirs[selected]);
                             }
                             else if (mes == "Previous")
                             {
