@@ -1,2 +1,2 @@
 # terminalExplorer
-just a simple file explorer and a simple code
+just a simple file explorer with a simple code
