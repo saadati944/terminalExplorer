@@ -53,8 +53,44 @@ namespace terminalExplorer
                 };
             }
         }
+        static void welcomeMes(string mes)
+        {
+            int latency = 10;
+            Console.Write("░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("▒░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("▓▒░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("█▓▒░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("▓█▓▒░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("▒▓█▓▒░");
+            System.Threading.Thread.Sleep(latency);
+            Console.SetCursorPosition(0, 0);
+            Console.Write("░▒▓█▓▒░");
+            System.Threading.Thread.Sleep(latency);
+            for (int i = 0; i < mes.Length; i++)
+            {
+                Console.SetCursorPosition(i, 0);
+                if (i < mes.Length - 6)
+                    Console.Write(mes[i].ToString() + "░▒▓█▓▒░");
+                else Console.Write(mes[i].ToString() + "░▒▓█▓▒░".Substring(0, mes.Length - i));
+                System.Threading.Thread.Sleep(latency);
+            }
+            Console.SetCursorPosition(mes.Length,0);
+            Console.Write("  ");
+            System.Threading.Thread.Sleep(700);
+        }
         static void Main(string[] args)
         {
+            welcomeMes("press tab to open menu ");
             if (args.Length > 0 && System.IO.Directory.Exists(args[0]))
                 openPath(args[0]);
             else
@@ -126,7 +162,7 @@ namespace terminalExplorer
                     {
                         bool ex = false;
                         string op1 = (selected < dirs.Length) ? "Open selected in explorer" : "Run width argument";
-                        string mes = menu(new string[] { "Back", "Goto", "Home", "Info (path)", "info (selected)" , op1,"Open path in explorer", "Previous", "Exit" }, "select an item then press enter\n");
+                        string mes = menu(new string[] { "Back", "Goto", "Home", "Info (path)", "info (selected)" ,"Delete","Copy", op1,"Open path in explorer", "Previous", "Exit" }, "select an item then press enter\n");
                         {
                             if (mes == "Back")
                                 ex = true;
@@ -191,6 +227,36 @@ namespace terminalExplorer
                                     Console.ReadKey(true);
                                 }
                             }
+                            else if (mes == "Delete")
+                            {
+                                Console.Clear();
+                                ex = true;
+                                Console.Write("Are you sure? (yes=yes , something else=no)");
+                                if (Console.ReadLine() == "yes")
+                                {
+                                    if (selected < dirs.Length)
+                                        delete(path + "\\" + dirs[selected]);
+                                    else
+                                        delete(path + "\\" + files[selected - dirs.Length]);
+                                    openPath(path);
+                                }
+                                System.Threading.Thread.Sleep(1000);
+                            }
+
+                            else if (selected>=dirs.Length&&mes == "Copy")
+                            {
+                                Console.Clear();
+                                ex = true;
+                                Console.Write("enter path to move (dont forget file name and extention) : ");
+                                string path2 = Console.ReadLine();
+                                try
+                                {
+                                    System.IO.File.Copy(path + "\\" + files[selected - dirs.Length], path2);
+                                    Console.Write("ok");
+                                }
+                                catch(Exception exe) { Console.Write(exe.Message); }
+                                System.Threading.Thread.Sleep(1000);
+                            }
                             else if (mes == op1)
                             {
                                 if (selected < dirs.Length)
@@ -215,7 +281,7 @@ namespace terminalExplorer
                             {
                                 ex = true;
                                 prevPath.Insert(0, "Back");
-                                int innerMes = menu2(prevPath.ToArray(), "select an to item to go to it\n") - 1;
+                                int innerMes = menu2(prevPath.ToArray(), "select an item to go to it\n") - 1;
                                 prevPath.RemoveAt(0);
                                 if (innerMes != -1)
                                 {
@@ -320,6 +386,48 @@ namespace terminalExplorer
                     last = selected;
                 }
                 //innerWhileBreack:;
+            }
+        }
+        static bool dirDelete(string path)
+        {
+            bool ret = true;
+            foreach (string x in System.IO.Directory.GetFiles(path))
+            {
+                try { System.IO.File.Delete(x); }
+                catch { ret = false; };
+            }
+            foreach (string x in System.IO.Directory.GetFiles(path))
+            {
+                if (!dirDelete(x))
+                    ret = false;
+            }
+            try
+            {
+                if (ret)
+                    System.IO.Directory.Delete(path);
+                return ret;
+            }
+            catch { return false; }
+        }
+        static bool delete(string path)
+        {
+            if (System.IO.Directory.Exists(path))
+            {
+                if (dirDelete(path))
+                {
+                    Console.Write("ok. the directory was deleted");
+                    return true;
+                }
+                else
+                {
+                    Console.Write("something went wrong !!!");
+                    return true;
+                }
+            }
+            else
+            {
+                try { System.IO.File.Delete(path); return true; }
+                catch { return false; };
             }
         }
         static string cutLast(string v)
